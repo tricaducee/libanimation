@@ -1,11 +1,8 @@
 #include <unistd.h>
 #include <stdlib.h>
-/*
-void wait()
-{
-	usleep(20000);
-}*/
-int ft_strlen(char *str)
+#include <fcntl.h>
+
+int ft_strlen(const char *str)
 {
 	int i = 0;
 	while (str[i])
@@ -38,8 +35,29 @@ void ft_strcpy(char *src, char *dst)
 char *ft_strdup(char *str)
 {
 	char *ret_str = malloc((ft_strlen(str) + 1) * sizeof(char));
+	if (!ret_str)
+		return (NULL);
 	ft_strcpy(str, ret_str);
 	return (ret_str);
+}
+
+char	*ft_strjoin(const char *s1, const char *s2)
+{
+	char	*str;
+	char	*ret;
+
+	if (!(s1 && s2))
+		return (0);
+	str = malloc((ft_strlen(s1) + ft_strlen(s2) + 1) * sizeof(char));
+	ret = str;
+	if (!str)
+		return (0);
+	while (*s1)
+		*(str++) = *(s1++);
+	while (*s2)
+		*(str++) = *(s2++);
+	*str = 0;
+	return (ret);
 }
 
 void free_ptab(char **strs)
@@ -61,6 +79,128 @@ void upper_line(int n)
 	{
 		ft_putstr("\033[A");
 	}
+}
+
+char *file_to_str(int fd)
+{
+	char buf[1001];
+	char *result = NULL;
+	char *tmp = NULL;
+	int rd;
+	rd = read(fd, buf, 1000);
+	buf[rd] = '\0';
+	result = ft_strdup(buf);
+	if (!result)
+		return (NULL);
+	while (rd == 1000)
+	{
+		rd = read(fd, buf, 1000);
+		if (!rd)
+			break;
+		buf[rd] = '\0';
+		tmp = result;
+		result = ft_strjoin(tmp, buf);
+		if (!result)
+			return (NULL);
+		free(tmp);
+	}
+	return (result);
+}
+
+int	compt_frame(char const *s)
+{
+	int	i;
+	int	j;
+
+	i = 0;
+	j = 0;
+	while (s[i])
+	{
+		if (s[i] == '\n' && (s[i + 1] == '\n' || !s[i + 1]))
+			j++;
+		i++;
+	}
+	return (j);
+}
+
+char	*ft_substr(char const *s, unsigned int start, size_t len)
+{
+	char			*s2;
+	unsigned int	i;
+	unsigned int	f_len;
+
+	if (!s)
+		return (0);
+	f_len = ft_strlen(s);
+	if (start >= f_len)
+		return (ft_strdup(""));
+	if (len > f_len - start)
+		len = f_len - start;
+	s2 = malloc((len + 1) * sizeof(char));
+	if (!s2)
+		return (0);
+	i = 0;
+	while (s[start + i] && i < len)
+	{
+		s2[i] = s[start + i];
+		i++;
+	}
+	s2[i] = 0;
+	return (s2);
+}
+
+char	**ft_split_frame(char const *s)
+{
+	char	**strs;
+	int		i;
+	int		j;
+
+	i = 0;
+	if (!s)
+		return (0);
+	strs = malloc((compt_frame(s) + 1) * sizeof(char *));
+	if (!strs)
+		return (0);
+	while (*s)
+	{
+		j = 0;
+		while (s[j])
+		{
+			j++;
+			if ((s[j] == '\n' && s[j - 1] == '\n') || (!s[j] && s[j - 1] == '\n'))
+				break;
+			j++;
+		}
+		strs[i++] = ft_substr(s, 0, j);
+		if (s[j] == '\n')
+			j++;
+		s += j;
+	}
+	strs[i] = NULL;
+	return (strs);
+}
+
+char **file_to_anim_strs(char *str)
+{
+	int fd;
+	char *str_file;
+	char **ret_strs;
+	fd = open(str, O_RDONLY);
+	if (fd < 0)
+	{
+		ft_putstr("Erreur, le fichier n'as pas pu etre ouvert.");
+		return (NULL);
+	}
+	str_file = file_to_str(fd);
+	close(fd);
+	if (!str_file)
+		return (NULL);
+	ret_strs = ft_split_frame(str_file);
+	if (!ret_strs)
+		return (NULL);
+	free(str_file);
+	str_file = NULL;
+	return (ret_strs);
 }
 
 void origin_column()
@@ -127,9 +267,11 @@ void color_reset()
 
 int main()
 {
-	int i;
+	int i = 0;
 	int j;
 	char **animation;
+	animation = file_to_anim_strs("animation.txt");
+	/*
 	animation = malloc(218 * sizeof(char*));
 	animation[0] = ft_strdup("0000000000000000000000000000000000000000\n0000000000000000000000000000000000000000\n0000000000000000000000000000000000000000\n0000000000000000000000000000000000000000\n0000000000000000000000000000000000000000\n");
 	animation[1] = ft_strdup("\033[0;31m!\033[0m000000000000000000000000000000000000000\n0000000000000000000000000000000000000000\n0000000000000000000000000000000000000000\n0000000000000000000000000000000000000000\n0000000000000000000000000000000000000000\n");
@@ -387,11 +529,12 @@ int main()
 
 	}
 	color_reset();
+	*/
 	for (i = 0 ; i < 3 ; i ++)
 	{
 		anime_strs(animation, 5, 25);
 		upper_line_origin(5);
-	}	
+	}
 	free_ptab(animation);
 	return (0);
 }
