@@ -1,0 +1,36 @@
+#r   Loading    
+
+   Loading .  
+
+   Loading .. 
+
+#g   Loading ...
+
+   Loading  ..
+
+   Loading   .
+
+#b   Loading    
+
+   Loading .  
+
+   Loading .. 
+
+#p   Loading ...
+
+   Loading  ..
+
+   Loading   .
+
+#c   Loading    
+
+   Loading .  
+
+   Loading .. 
+
+#y   Loading ...
+
+   Loading  ..
+
+   Loading   .
+

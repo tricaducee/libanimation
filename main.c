@@ -25,6 +25,7 @@ char	*ft_substr(char const *s, unsigned int start, size_t len);
 char	**ft_split_frame(char const *s);
 char	**file_to_anim_strs(char *str);
 void	origin_column();
+void	print_color_file(char *file);
 void	upper_line_origin(int n);
 void	anime_strs(char **strs, int n, int fps);
 void	anime_strs_color(char **strs, int n, int fps);
@@ -225,6 +226,25 @@ char *file_to_str(int fd)
 	return (result);
 }
 
+void print_color_file(char *file)
+{
+	int fd;
+	char *str;
+	fd = open(file, O_RDONLY);
+	if (fd < 0)
+	{
+		ft_putstr_color("#rErreur, le fichier n'as pas pu etre ouvert");
+		return;
+	}
+	str = file_to_str(fd);
+	if (!str)
+		return;
+	ft_putstr_color(str);
+	color_reset();
+	free(str);
+	str = NULL;
+}
+
 int	compt_frame(char const *s)
 {
 	int	i;
@@ -287,7 +307,6 @@ char	**ft_split_frame(char const *s)
 			j++;
 			if ((s[j] == '\n' && s[j - 1] == '\n') || (!s[j] && s[j - 1] == '\n'))
 				break;
-			j++;
 		}
 		strs[i++] = ft_substr(s, 0, j);
 		if (s[j] == '\n')
@@ -341,6 +360,7 @@ void anime_strs(char **strs, int n, int fps)
 			upper_line_origin(n);
 		wait_fps(fps);
 	}
+	color_reset();
 }
 
 void anime_strs_color(char **strs, int n, int fps)
@@ -352,6 +372,7 @@ void anime_strs_color(char **strs, int n, int fps)
 			upper_line_origin(n);
 		wait_fps(fps);
 	}
+	color_reset();
 }
 
 int lines_compt(char *str)
@@ -366,7 +387,7 @@ int lines_compt(char *str)
 	return (i);
 }
 
-void file_animation(char *file, int repeat, int fps)
+void file_animation_rest(char *file, int repeat, int fps)
 {
 	int n_lines;
 	char **animation;
@@ -377,12 +398,13 @@ void file_animation(char *file, int repeat, int fps)
 	for (int i = 0 ; i < repeat ; i++)
 	{
 		anime_strs(animation, n_lines, fps);
-		upper_line_origin(n_lines);
+		if (i < repeat - 1)
+			upper_line_origin(n_lines);
 	}
 	free_ptab(animation);
 }
 
-void file_animation_color(char *file, int repeat, int fps)
+void file_animation_color_rest(char *file, int repeat, int fps)
 {
 	int n_lines;
 	char **animation;
@@ -393,14 +415,15 @@ void file_animation_color(char *file, int repeat, int fps)
 	for (int i = 0 ; i < repeat ; i++)
 	{
 		anime_strs_color(animation, n_lines, fps);
-		upper_line_origin(n_lines);
+		if (i < repeat - 1)
+			upper_line_origin(n_lines);
 	}
 	free_ptab(animation);
 }
 
 int main()
 {
-	file_animation_color("animation_color.txt", 3, 2);
+	print_color_file("loading.txt");
 	return (0);
 }
 /*
