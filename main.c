@@ -46,10 +46,24 @@ void wait_fps(int fps)
 	usleep(1000000 / fps);
 }
 
+void wait_msec(int msec)
+{
+	usleep(msec * 1000);
+}
+
 void ft_putstr(const char *str)
 {
 	while (*str)
 		write(1, &(*(str++)), 1);
+}
+
+void ft_putstr_delay(const char *str, int msec)
+{
+	while (*str)
+	{
+		write(1, &(*(str++)), 1);
+		wait_msec(msec);
+	}
 }
 
 void red()
@@ -140,6 +154,55 @@ void ft_putstr_color(const char *str)
 	}
 }
 
+void ft_putstr_color_delay(const char *str, int msec)
+{
+	while (*str)
+	{
+		if (*str == '#')
+		{
+			str++;
+			switch (*str)
+			{
+				case '#':
+					write(1, "#", 1);
+					str++;
+				case 'r':
+					red();
+					str++;
+					break;
+				case 'g':
+					green();
+					str++;
+					break;
+				case 'y':
+					yellow();
+					str++;
+					break;
+				case 'b':
+					blue();
+					str++;
+					break;
+				case 'p':
+					purple();
+					str++;
+					break;
+				case 'c':
+					cyan();
+					str++;
+					break;
+				case 'x':
+					color_reset();
+					str++;
+					break;
+				default:
+					break;
+			}
+		}
+		write(1, &(*(str++)), 1);
+		wait_msec(msec);
+	}
+}
+
 void ft_strcpy(char *src, char *dst)
 {
 	while (*src)
@@ -197,6 +260,23 @@ void upper_line(int n)
 	for (int i = 0 ; i < n ; i++)
 	{
 		ft_putstr("\033[A");
+	}
+}
+
+void erase_c(int n)
+{
+	for (int i = 0 ; i < n ; i++)
+	{
+		ft_putstr("\033[D \033[D");
+	}
+}
+
+void erase_c_delay(int n, int msec)
+{
+	for (int i = 0 ; i < n ; i++)
+	{
+		ft_putstr("\033[D \033[D");
+		wait_msec(msec);
 	}
 }
 
@@ -420,10 +500,43 @@ void file_animation_color_rest(char *file, int repeat, int fps)
 	}
 	free_ptab(animation);
 }
+void file_animation(char *file, int repeat, int fps)
+{
+	int n_lines;
+	char **animation;
+	animation = file_to_anim_strs(file);
+	if (!animation)
+		return;
+	n_lines = lines_compt(*animation);
+	for (int i = 0 ; i < repeat ; i++)
+	{
+		anime_strs(animation, n_lines, fps);
+		upper_line_origin(n_lines);
+	}
+	free_ptab(animation);
+}
+
+void file_animation_color(char *file, int repeat, int fps)
+{
+	int n_lines;
+	char **animation;
+	animation = file_to_anim_strs(file);
+	if (!animation)
+		return;
+	n_lines = lines_compt(*animation);
+	for (int i = 0 ; i < repeat ; i++)
+	{
+		anime_strs_color(animation, n_lines, fps);
+		upper_line_origin(n_lines);
+	}
+	free_ptab(animation);
+}
 
 int main()
 {
-	print_color_file("loading.txt");
+	ft_putstr_color_delay("H#ye#rl#pl#co#b, #gX#bo#ce#pl#rd", 250);
+	erase_c_delay(5, 200);
+	ft_putstr_color_delay("#gW#bo#cr#pl#rd #y!#x", 220);
 	return (0);
 }
 /*
