@@ -18,13 +18,13 @@ void	ft_strcpy(char *src, char *dst);
 char	*ft_strdup(char *str);
 char	*ft_strjoin(const char *s1, const char *s2);
 void	free_ptab(char **strs);
-void	upper_line(int n);
+void	top_arrow(int n);
 char	*file_to_str(int fd);
 int		compt_frame(char const *s);
 char	*ft_substr(char const *s, unsigned int start, size_t len);
 char	**ft_split_frame(char const *s);
 char	**file_to_anim_strs(char *str);
-void	origin_column();
+void	carriage_return();
 void	print_color_file(char *file);
 void	upper_line_origin(int n);
 void	anime_strs(char **strs, int n, int fps);
@@ -51,18 +51,23 @@ void wait_msec(int msec)
 	usleep(msec * 1000);
 }
 
+void wait_mpm(int mpm)
+{
+	usleep(12000000 / mpm);
+}
+
 void ft_putstr(const char *str)
 {
 	while (*str)
 		write(1, &(*(str++)), 1);
 }
 
-void ft_putstr_delay(const char *str, int msec)
+void ft_putstr_delay(const char *str, int mpm)
 {
 	while (*str)
 	{
 		write(1, &(*(str++)), 1);
-		wait_msec(msec);
+		wait_mpm(mpm);
 	}
 }
 
@@ -118,6 +123,7 @@ void ft_putstr_color(const char *str)
 				case '#':
 					write(1, "#", 1);
 					str++;
+					break;
 				case 'r':
 					red();
 					str++;
@@ -150,11 +156,13 @@ void ft_putstr_color(const char *str)
 					break;
 			}
 		}
-		write(1, &(*(str++)), 1);
+		if (*str && *str != '#')
+			write(1, &(*(str++)), 1);
 	}
+	color_reset();
 }
 
-void ft_putstr_color_delay(const char *str, int msec)
+void ft_putstr_color_delay(const char *str, int mpm)
 {
 	while (*str)
 	{
@@ -166,6 +174,7 @@ void ft_putstr_color_delay(const char *str, int msec)
 				case '#':
 					write(1, "#", 1);
 					str++;
+					break;
 				case 'r':
 					red();
 					str++;
@@ -198,9 +207,13 @@ void ft_putstr_color_delay(const char *str, int msec)
 					break;
 			}
 		}
-		write(1, &(*(str++)), 1);
-		wait_msec(msec);
+		if (*str && *str != '#')
+		{	
+			write(1, &(*(str++)), 1);
+			wait_mpm(mpm);
+		}	
 	}
+	color_reset();
 }
 
 void ft_strcpy(char *src, char *dst)
@@ -255,11 +268,35 @@ void free_ptab(char **strs)
 	strs = NULL;
 }
 
-void upper_line(int n)
+void top_arrow(int n)
 {
 	for (int i = 0 ; i < n ; i++)
 	{
 		ft_putstr("\033[A");
+	}
+}
+
+void bottom_arrow(int n)
+{
+	for (int i = 0 ; i < n ; i++)
+	{
+		ft_putstr("\033[B");
+	}
+}
+
+void left_arrow(int n)
+{
+	for (int i = 0 ; i < n ; i++)
+	{
+		ft_putstr("\033[D");
+	}
+}
+
+void right_arrow(int n)
+{
+	for (int i = 0 ; i < n ; i++)
+	{
+		ft_putstr("\033[C");
 	}
 }
 
@@ -271,12 +308,12 @@ void erase_c(int n)
 	}
 }
 
-void erase_c_delay(int n, int msec)
+void erase_c_delay(int n, int mpm)
 {
 	for (int i = 0 ; i < n ; i++)
 	{
 		ft_putstr("\033[D \033[D");
-		wait_msec(msec);
+		wait_mpm(mpm);
 	}
 }
 
@@ -320,7 +357,6 @@ void print_color_file(char *file)
 	if (!str)
 		return;
 	ft_putstr_color(str);
-	color_reset();
 	free(str);
 	str = NULL;
 }
@@ -420,15 +456,15 @@ char **file_to_anim_strs(char *str)
 	return (ret_strs);
 }
 
-void origin_column()
+void carriage_return()
 {
 	write(1, "\r", 1);
 }
 
 void upper_line_origin(int n)
 {
-	origin_column();
-	upper_line(n);
+	carriage_return();
+	top_arrow(n);
 }
 
 void anime_strs(char **strs, int n, int fps)
@@ -440,7 +476,6 @@ void anime_strs(char **strs, int n, int fps)
 			upper_line_origin(n);
 		wait_fps(fps);
 	}
-	color_reset();
 }
 
 void anime_strs_color(char **strs, int n, int fps)
@@ -452,7 +487,6 @@ void anime_strs_color(char **strs, int n, int fps)
 			upper_line_origin(n);
 		wait_fps(fps);
 	}
-	color_reset();
 }
 
 int lines_compt(char *str)
@@ -532,11 +566,308 @@ void file_animation_color(char *file, int repeat, int fps)
 	free_ptab(animation);
 }
 
+void ft_putstr_len(char *str, int size, int i)
+{
+	int j = 0;
+	while (j < size)
+	{
+		if (str[i])
+		{
+			write(1, &str[i++], 1);
+			j++;
+		}
+		else
+			i = 0;
+	}
+}
+
+void defil_str(char *str, int size, int fps, int loop)
+{
+	int i = 0;
+	int j;
+	int k = 0;
+	int len = ft_strlen(str);
+	for (int l = 0 ; l < loop ; l++)
+	{
+		do
+		{
+			j = 0;
+			i = len - k;
+			if (str[k])
+				k++;
+			else
+				k = 0;
+		ft_putstr_len(str, size, i);
+		carriage_return();
+		if (k)
+			wait_fps(fps);
+		} while (k != 0);
+	}
+	ft_putstr_len(str, size, 0);
+}
+
+void ft_putstr_len_color(char *str, int size, int i)
+{
+	int j = 0;
+	while (j < size)
+	{
+		if (str[i])
+		{
+			if (str[i] == '#')
+			{
+				i++;
+				switch (str[i])
+				{
+					case '#':
+						write(1, "#", 1);
+						i++;
+						j++;
+						break;
+					case 'r':
+						red();
+						i++;
+						break;
+					case 'g':
+						green();
+						i++;
+						break;
+					case 'y':
+						yellow();
+						i++;
+						break;
+					case 'b':
+						blue();
+						i++;
+						break;
+					case 'p':
+						purple();
+						i++;
+						break;
+					case 'c':
+						cyan();
+						i++;
+						break;
+					case 'x':
+						color_reset();
+						i++;
+						break;
+					default:
+						break;
+				}
+			}
+			if (str[i] && str[i] != '#')
+			{	
+				write(1, &str[i++], 1);
+				j++;
+			}
+		}
+		else
+			i = 0;
+	}
+	color_reset();
+}
+
+void defil_str_color_rev(char *str, int size, int fps, int loop)
+{
+	int i = 0;
+	int j;
+	int k = 0;
+	int len = ft_strlen(str);
+	for (int l = 0 ; l < loop ; l++)
+	{
+		do
+		{
+			j = 0;
+			i = len - k;
+			if (str[k])
+			{
+				k++;
+				if (len - (k + 2) >= 0 && str[len - (k + 2)] == '#')
+					k += 2;
+				else if (len - (k + 1) >= 0 && str[len - (k + 1)] == '#')
+					k++;
+			}
+			else
+				k = 0;
+			ft_putstr_len_color(str, size, i);
+			carriage_return();
+			if (k)
+				wait_fps(fps);
+		} while (k != 0);
+	}
+	ft_putstr_len_color(str, size, 0);
+}
+
+void defil_str_color(char *str, int size, int fps, int loop)
+{
+	int i = 0;
+	int j;
+	int k = 0;
+	for (int l = 0 ; l < loop ; l++)
+	{
+		do
+		{
+			j = 0;
+			i = k;
+			if (str[k])
+			{
+				if (str[k] == '#')
+					k += 2;
+				k++;
+			}
+			else
+				k = 0;
+			ft_putstr_len_color(str, size, i);
+			carriage_return();
+			if (k)
+				wait_fps(fps);
+		} while (k != 0);
+	}
+	ft_putstr_len_color(str, size, 0);
+}
+
+void ft_putstr_len_color_p(char *str, int size, int *i)
+{
+	int j = 0;
+	while (j < size)
+	{
+		if (str[*i])
+		{
+			if (str[*i] == '#')
+			{
+				(*i)++;
+				switch (str[(*i)++])
+				{
+					case '#':
+						(*i)++;
+						j++;
+						break;
+					case 'r':
+						red();
+						(*i)++;
+						break;
+					case 'g':
+						green();
+						(*i)++;
+						break;
+					case 'y':
+						yellow();
+						(*i)++;
+						break;
+					case 'b':
+						blue();
+						(*i)++;
+						break;
+					case 'p':
+						purple();
+						(*i)++;
+						break;
+					case 'c':
+						cyan();
+						(*i)++;
+						break;
+					case 'x':
+						color_reset();
+						(*i)++;
+						break;
+					default:
+						break;
+				}
+			}
+			if (str[*i] && str[*i] != '#')
+			{	
+				write(1, &str[(*i)++], 1);
+				j++;
+			}
+		}
+		else
+			*i = 0;
+	}
+	color_reset();
+}
+
+void defil_str_color_xy(char *str, int x, int y, int fps, int loop)
+{
+	int i = 0;
+	int j;
+	int k = 0;
+	int m;
+	for (int l = 0 ; l < loop ; l++)
+	{
+		do
+		{
+			j = 0;
+			i = k;
+			if (str[k])
+			{
+				if (str[k] == '#')
+					k += 2;
+				k++;
+			}
+			else
+				k = 0;
+			for (m = 0 ; m < y ; m++)
+			{
+				ft_putstr_len_color_p(str, x, &i);
+				write(1, "\n", 1);
+			}
+			upper_line_origin(y);
+			if (k)
+				wait_fps(fps);
+		} while (k != 0);
+	}
+	i = 0;
+	for (m = 0 ; m < y ; m++)
+	{
+		ft_putstr_len_color_p(str, x, &i);
+		write(1, "\n", 1);
+	}
+}
+
+void defil_str_color_rev_xy(char *str, int x, int y, int fps, int loop)
+{
+	int i = 0;
+	int j;
+	int k = 0;
+	int m;
+	int len = ft_strlen(str);
+	for (int l = 0 ; l < loop ; l++)
+	{
+		do
+		{
+			j = 0;
+			i = len - k;
+			if (str[k])
+			{
+				k++;
+				if (len - (k + 2) >= 0 && str[len - (k + 2)] == '#')
+					k += 2;
+				else if (len - (k + 1) >= 0 && str[len - (k + 1)] == '#')
+					k++;
+			}
+			else
+				k = 0;
+			for (m = 0 ; m < y ; m++)
+			{
+				ft_putstr_len_color_p(str, x, &i);
+				write(1, "\n", 1);
+			}
+			upper_line_origin(y);
+			if (k)
+				wait_fps(fps);
+		} while (k != 0);
+	}
+	i = 0;
+	for (m = 0 ; m < y ; m++)
+	{
+		ft_putstr_len_color_p(str, x, &i);
+		write(1, "\n", 1);
+	}
+}
+
 int main()
 {
-	ft_putstr_color_delay("H#ye#rl#pl#co#b, #gX#bo#ce#pl#rd", 250);
-	erase_c_delay(5, 200);
-	ft_putstr_color_delay("#gW#bo#cr#pl#rd #y!#x", 220);
+	defil_str_color_xy("#r?/|*&%$@0", 100, 20, 25, 10);
 	return (0);
 }
 /*
